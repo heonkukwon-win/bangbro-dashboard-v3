@@ -1,0 +1,9 @@
+{
+  "rewrites": [
+    { "source": "/api/quote", "destination": "/api/quote" }
+  ],
+  "routes": [
+    { "src": "/api/quote", "dest": "/api/quote.js" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
+}

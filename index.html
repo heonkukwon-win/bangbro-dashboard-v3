@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>BangBro Dashboard v3</title>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>body{margin:0;padding:0;}#root{min-height:100vh;}</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+const S = `
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --nv:#0D1B2E;--nv2:#152236;--nv3:#1E3350;--nv4:#243655;
+    --go:#C9943A;--gL:#F0C060;
+    --re:#E53E3E;--rL:#FCA5A5;
+    --gr:#22C55E;--gR:#86EFAC;
+    --or:#F97316;--bl:#3B82F6;
+    --gy:#64748B;--gY:#94A3B8;--gZ:#CBD5E1;
+    --wh:#F8FAFC;--bd:rgba(255,255,255,0.08);
+  }
+  body{background:var(--nv);color:var(--wh);font-family:'Noto Sans KR',sans-serif;}
+  .app{min-height:100vh;background:linear-gradient(135deg,#0D1B2E,#0A1628,#0D1B2E);}
+  .hdr{background:linear-gradient(90deg,var(--nv2),var(--nv3));border-bottom:2px solid var(--go);
+       padding:14px 20px;display:flex;align-items:center;justify-content:space-between;
+       position:sticky;top:0;z-index:100;}
+  .hdr-t{font-family:'Bebas Neue',cursive;font-size:26px;color:var(--gL);letter-spacing:3px;}
+  .hdr-s{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--gY);margin-top:2px;}
+  .ldot{width:7px;height:7px;background:var(--re);border-radius:50%;display:inline-block;
+        margin-right:5px;animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+  .tabs{display:flex;gap:3px;padding:14px 20px 0;border-bottom:1px solid var(--bd);flex-wrap:wrap;}
+  .tab{padding:8px 16px;border-radius:8px 8px 0 0;font-size:12px;font-weight:700;cursor:pointer;
+       transition:all .2s;border:1px solid transparent;border-bottom:none;
+       color:var(--gY);background:transparent;font-family:'Noto Sans KR',sans-serif;}
+  .tab.on{background:var(--nv3);color:var(--gL);border-color:var(--bd);}
+  .tab:hover:not(.on){color:var(--wh);background:rgba(255,255,255,.05);}
+  .content{padding:20px;}
+  .card{background:var(--nv2);border:1px solid var(--bd);border-radius:12px;padding:18px;
+        transition:transform .2s,box-shadow .2s;}
+  .card:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.4);}
+  .ct{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--gY);
+      letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;}
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .g6{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;}
+  @media(max-width:1100px){.g6{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:900px){.g6{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:1fr 1fr}.g2{grid-template-columns:1fr}}
+  @media(max-width:600px){.g6{grid-template-columns:1fr 1fr}}
+  .bdg{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;
+       font-size:11px;font-weight:700;font-family:'IBM Plex Mono',monospace;}
+  .br{background:rgba(229,62,62,.15);color:var(--re);border:1px solid rgba(229,62,62,.3);}
+  .bg{background:rgba(34,197,94,.15);color:var(--gr);border:1px solid rgba(34,197,94,.3);}
+  .by{background:rgba(234,179,8,.15);color:#EAB308;border:1px solid rgba(234,179,8,.3);}
+  .bgy{background:rgba(100,116,139,.15);color:var(--gY);border:1px solid rgba(100,116,139,.3);}
+  .bor{background:rgba(249,115,22,.15);color:var(--or);border:1px solid rgba(249,115,22,.3);}
+  .bn{font-family:'Bebas Neue',cursive;font-size:46px;line-height:1;}
+  .bn.re{color:var(--re)} .bn.gr{color:var(--gr)} .bn.go{color:var(--gL)}
+  .bn.or{color:var(--or)} .bn.bl{color:var(--bl)}
+  .gb{height:7px;border-radius:4px;background:rgba(255,255,255,.1);overflow:hidden;margin:6px 0;}
+  .gf{height:100%;border-radius:4px;transition:width .6s;}
+  .sr{display:flex;align-items:center;justify-content:space-between;
+      padding:8px 0;border-bottom:1px solid var(--bd);}
+  .sr:last-child{border-bottom:none;}
+  .sl{font-size:12px;color:var(--gY);}
+  .sv{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;}
+  .sw{margin:14px 0;}
+  .sw label{font-size:11px;color:var(--gY);display:flex;justify-content:space-between;margin-bottom:5px;}
+  input[type=range]{width:100%;accent-color:var(--go);cursor:pointer;}
+  .rb{background:linear-gradient(135deg,var(--nv3),rgba(201,148,58,.1));
+      border:1px solid rgba(201,148,58,.3);border-radius:10px;padding:16px;margin-top:14px;}
+  .rr{display:flex;justify-content:space-between;align-items:center;
+      padding:7px 0;border-bottom:1px solid var(--bd);}
+  .rr:last-child{border-bottom:none;}
+  .rl{font-size:12px;color:var(--gY);}
+  .rv{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;color:var(--gL);}
+  .ci{display:flex;align-items:flex-start;gap:9px;padding:9px 0;
+      border-bottom:1px solid var(--bd);cursor:pointer;}
+  .ci:last-child{border-bottom:none;}
+  .cb{width:19px;height:19px;border-radius:4px;border:2px solid var(--bd);
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;margin-top:1px;}
+  .cb.ck{background:var(--gr);border-color:var(--gr);}
+  .ctxt{font-size:12px;line-height:1.5;}
+  .ctxt.dn{color:var(--gY);text-decoration:line-through;}
+  .wb{background:rgba(229,62,62,.1);border:1px solid rgba(229,62,62,.3);
+      border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;line-height:1.6;color:#FCA5A5;}
+  .gb2{background:rgba(201,148,58,.1);border:1px solid rgba(201,148,58,.3);
+       border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;line-height:1.6;color:var(--gL);}
+  .ib{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);
+      border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;line-height:1.6;color:#93C5FD;}
+  .pb{background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);
+      border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;line-height:1.8;color:#C4B5FD;}
+  .mg{margin-bottom:16px;}
+  .fb{display:flex;justify-content:space-between;align-items:center;}
+  .sm{font-size:11px;color:var(--gY);}
+  /* 게이지 공통 */
+  .gauge-wrap{position:relative;height:58px;margin:16px 0 10px;}
+  .gauge-track{position:absolute;bottom:0;left:0;right:0;height:14px;border-radius:7px;opacity:.35;}
+  .gauge-fill{position:absolute;bottom:0;left:0;height:14px;border-radius:7px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+  .gauge-line{position:absolute;bottom:-4px;width:2px;height:22px;background:rgba(255,255,255,.9);border-radius:1px;transform:translateX(-50%);}
+  .gauge-line-lbl{position:absolute;top:-20px;transform:translateX(-50%);font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,.7);white-space:nowrap;}
+  .gauge-pin{position:absolute;bottom:10px;width:3px;height:28px;border-radius:2px;transform:translateX(-50%);box-shadow:0 0 8px rgba(255,255,255,.5);}
+  .gauge-pin-lbl{position:absolute;top:-30px;transform:translateX(-50%);font-family:'Bebas Neue',cursive;font-size:17px;white-space:nowrap;}
+  .gauge-ticks{position:absolute;bottom:18px;left:0;right:0;display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gY);}
+  .gauge-status{border-radius:8px;padding:10px 14px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:8px;margin-top:10px;border:1px solid;}
+  .yh-row{display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--bd);}
+  .yh-row:last-child{border-bottom:none;}
+  .yh-date{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--gY);min-width:50px;}
+  .yh-bw{flex:1;height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;}
+  .yh-bf{height:100%;border-radius:3px;}
+  .yh-val{font-family:'IBM Plex Mono',monospace;font-size:10px;min-width:40px;text-align:right;}
+  .prog-seg{height:5px;border-radius:3px;margin-bottom:3px;}
+`;
+
+// ── 최신 데이터 (2026.03.27 종가) ────────────────────────────
+const D = {
+  sp500: { v: 6368, ma: 6633 },
+  ndx:   { v: 20948, ma: 24200 },
+  tqqq:  { v: 38.50, ytd: -26.8, h: 60.69, l: 17.50 },
+  fngu:  { v: 66.20, ytd: -38.4 },
+  soxl:  { v: 14.20, ytd: -42.1 },
+  fg: 10,
+  vix: 27.44,
+  gold: 4376,
+  tnx: {
+    current: 4.416,
+    threshold: 4.4,   // ★ 기준선 4.4%
+    history: [
+      { date:'03/20', val: 4.39 },
+      { date:'03/21', val: 4.34 },
+      { date:'03/24', val: 4.39 },
+      { date:'03/25', val: 4.34 },
+      { date:'03/26', val: 4.42 },
+      { date:'03/27', val: 4.416 },
+    ]
+  },
+  oil: {
+    current: 112.57,  // 브렌트유
+    threshold: 95,    // ★ 기준선 $95
+    history: [
+      { date:'03/20', val: 104 },
+      { date:'03/21', val: 106 },
+      { date:'03/24', val: 108 },
+      { date:'03/25', val: 109 },
+      { date:'03/26', val: 110 },
+      { date:'03/27', val: 112.57 },
+    ]
+  },
+  // ── 기술적 지표 4종 ────────────────────────────────────────
+  sps: {   // Stock Price Strength (NYSE 52주 신고가-신저가 Net %)
+    current: -1.2,     // 현재 약 -1.2% (차트 기준 3/27)
+    buyLevel: -5.0,    // ★ -5% 이하 → 극단 공포 매수 신호
+    hotLevel: 5.0,     // 5% 이상 → 과열
+    tariffLow: -8.0,   // 📌 2025 관세쇼크 저점
+    history: [
+      { date:'03/10', val:  2.1 },
+      { date:'03/15', val:  1.3 },
+      { date:'03/20', val:  0.5 },
+      { date:'03/21', val:  0.1 },
+      { date:'03/24', val: -0.6 },
+      { date:'03/27', val: -1.2 },
+    ]
+  },
+  spb: {   // Stock Price Breadth (McClellan Summation Index / RASI)
+    current: -385,
+    buyLevel: 500,     // ★ 500 이하 → 매수 신호
+    hotLevel: 2000,    // 2000 이상 → 과열
+    tariffLow: -900,   // 📌 2025 관세쇼크 저점 (약 -850~-950)
+    history: [
+      { date:'03/10', val:  300 },
+      { date:'03/15', val:  100 },
+      { date:'03/20', val: -120 },
+      { date:'03/21', val: -180 },
+      { date:'03/24', val: -280 },
+      { date:'03/27', val: -385 },
+    ]
+  },
+  pcr: {   // Put/Call Ratio (CBOE Total)
+    current: 1.15,
+    buyLevel: 0.8,     // ★ 0.8 이하 → 과매수(경계)  /  1.0 이상 → 역발상 매수
+    tariffHigh: 1.20,  // 📌 2025 관세쇼크 고점 (역발상 매수 극점)
+    history: [
+      { date:'03/10', val: 0.88 },
+      { date:'03/15', val: 0.92 },
+      { date:'03/20', val: 0.98 },
+      { date:'03/21', val: 1.02 },
+      { date:'03/24', val: 1.08 },
+      { date:'03/27', val: 1.15 },
+    ]
+  },
+  rsi: {   // S&P 500 RSI (14일)
+    current: 22.08,
+    buyLevel: 30,      // ★ 30 이하 → 매수 신호 (과매도)
+    hotLevel: 75,      // 75 이상 → 과열 (매도 경계)
+    tariffLow: 23.0,   // 📌 2025 관세쇼크 저점 (4월 4~7일 약 23)
+    history: [
+      { date:'03/15', val: 50 },
+      { date:'03/20', val: 42 },
+      { date:'03/21', val: 38 },
+      { date:'03/24', val: 34 },
+      { date:'03/26', val: 24 },
+      { date:'03/27', val: 22.08 },
+    ]
+  }
+};
+
+const fmtW = n => n>=1e8?`${(n/1e8).toFixed(1)}억`:n>=1e4?`${(n/1e4).toFixed(0)}만`:`${n}`;
+
+// ── 기술지표 미니 게이지 컴포넌트 ─────────────────────────────
+function TechCard({ title, sub, current, buyLevel, hotLevel, min, max, unit='', history, flip=false, tariffRef=null, tariffLabel='관세쇼크 저점' }) {
+  // flip=true → 낮을수록 매수 (SPS, SPB, RSI)
+  // flip=false → 높을수록 매수 (PCR: 1.0 이상이 역발상 매수)
+  const isBuy   = flip ? current <= buyLevel  : current >= buyLevel;
+  const isHot   = flip ? current >= hotLevel  : current <= hotLevel;
+  const pct     = Math.min(100, Math.max(0, ((current - min) / (max - min)) * 100)).toFixed(1);
+  const buyPct  = Math.min(100, Math.max(0, ((buyLevel - min) / (max - min)) * 100)).toFixed(1);
+  const hotPct  = hotLevel != null ? Math.min(100, Math.max(0, ((hotLevel - min) / (max - min)) * 100)).toFixed(1) : null;
+  const tariffPct = tariffRef != null ? Math.min(100, Math.max(0, ((tariffRef - min) / (max - min)) * 100)).toFixed(1) : null;
+
+  // 현재값 vs 관세쇼크 비교
+  const tariffDist = tariffRef != null ? Math.abs(current - tariffRef) : null;
+  const tariffProg = tariffRef != null
+    ? flip
+      ? Math.round((1 - (current - tariffRef) / (buyLevel - tariffRef)) * 100)  // 얼마나 저점에 가까운지
+      : Math.round(((current - buyLevel) / (tariffRef - buyLevel)) * 100)
+    : null;
+
+  const statusColor = isBuy ? 'var(--gr)' : isHot ? 'var(--re)' : '#EAB308';
+  const statusBg    = isBuy ? 'rgba(34,197,94,.1)' : isHot ? 'rgba(229,62,62,.1)' : 'rgba(234,179,8,.1)';
+  const statusBd    = isBuy ? 'rgba(34,197,94,.3)' : isHot ? 'rgba(229,62,62,.3)' : 'rgba(234,179,8,.3)';
+  const statusTxt   = isBuy ? '✅ 매수 신호!' : isHot ? '🔴 과열 경계' : '🟡 중립 관망';
+  const statusLbl   = isBuy ? 'bg' : isHot ? 'br' : 'by';
+
+  const fmt = v => unit === '%' ? `${v.toFixed(1)}%` : unit === 'x' ? `${v.toFixed(2)}x` : v >= 0 ? `+${v.toFixed(0)}` : `${v.toFixed(0)}`;
+
+  return (
+    <div className="card mg">
+      <div className="ct">{title}</div>
+      <div className="fb" style={{marginBottom:6}}>
+        <div>
+          <div className="bn" style={{color:statusColor, fontSize:42}}>{fmt(current)}</div>
+          <div className="sm" style={{marginTop:3}}>{sub}</div>
+        </div>
+        <div style={{textAlign:'right'}}>
+          <span className={`bdg ${statusLbl}`} style={{fontSize:11,padding:'4px 12px'}}>{statusTxt}</span>
+          <div className="sm" style={{marginTop:5}}>
+            매수기준: {unit==='x'?`${buyLevel}x`:`${buyLevel}`}{unit==='%'?'%':''}
+            {hotLevel != null && ` / 과열: ${hotLevel}${unit==='%'?'%':''}`}
+          </div>
+        </div>
+      </div>
+
+      {/* 3구간 트랙 게이지 */}
+      <div style={{position:'relative',height:52,margin:'14px 0 8px'}}>
+        {/* 배경 트랙 */}
+        <div style={{position:'absolute',bottom:0,left:0,right:0,height:12,borderRadius:6,
+          background: flip
+            ? `linear-gradient(90deg, #22C55E 0%, #22C55E ${buyPct}%, #EAB308 ${buyPct}%, #EAB308 ${hotPct ?? 80}%, #EF4444 ${hotPct ?? 80}%, #EF4444 100%)`
+            : `linear-gradient(90deg, #EF4444 0%, #EF4444 ${buyPct}%, #EAB308 ${buyPct}%, #EAB308 ${hotPct ?? 80}%, #22C55E ${hotPct ?? 80}%, #22C55E 100%)`,
+          opacity:0.3}}/>
+        {/* 채워지는 바 */}
+        <div style={{position:'absolute',bottom:0,left:0,height:12,borderRadius:6,
+          width:`${pct}%`,background:statusColor,transition:'width .8s',opacity:0.85}}/>
+        {/* 매수 기준선 */}
+        <div style={{position:'absolute',bottom:-3,left:`${buyPct}%`,width:2,height:18,
+          background:'#22C55E',borderRadius:1,transform:'translateX(-50%)'}}>
+          <div style={{position:'absolute',top:-18,transform:'translateX(-50%)',
+            fontFamily:'IBM Plex Mono',fontSize:8,color:'#22C55E',whiteSpace:'nowrap'}}>
+            매수{unit==='x'?` ${buyLevel}x`:` ${buyLevel}`}
+          </div>
+        </div>
+        {/* 과열 기준선 */}
+        {hotLevel != null && (
+          <div style={{position:'absolute',bottom:-3,left:`${hotPct}%`,width:2,height:18,
+            background:'#EF4444',borderRadius:1,transform:'translateX(-50%)'}}>
+            <div style={{position:'absolute',top:-18,transform:'translateX(-50%)',
+              fontFamily:'IBM Plex Mono',fontSize:8,color:'#EF4444',whiteSpace:'nowrap'}}>
+              과열{unit==='x'?` ${hotLevel}x`:` ${hotLevel}`}
+            </div>
+          </div>
+        )}
+        {/* 현재값 핀 */}
+        <div style={{position:'absolute',bottom:8,left:`${pct}%`,width:3,height:26,
+          borderRadius:2,background:statusColor,transform:'translateX(-50%)',
+          boxShadow:`0 0 8px ${statusColor}80`,transition:'left .8s'}}/>
+        {/* 관세쇼크 저점 기준선 */}
+        {tariffPct != null && (
+          <div style={{position:'absolute',bottom:-3,left:`${tariffPct}%`,width:2,height:18,
+            background:'#A78BFA',borderRadius:1,transform:'translateX(-50%)',opacity:0.9}}>
+            <div style={{position:'absolute',top:-18,transform:'translateX(-50%)',
+              fontFamily:'IBM Plex Mono',fontSize:8,color:'#A78BFA',whiteSpace:'nowrap'}}>
+              📌관세쇼크
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 상태 배너 */}
+      <div style={{borderRadius:8,padding:'8px 12px',fontSize:11,fontWeight:700,
+        background:statusBg,border:`1px solid ${statusBd}`,color:statusColor,marginBottom:10}}>
+        {statusTxt} — 현재 {fmt(current)}
+        {isBuy && ' 📍 매수 신호 구간'}
+        {isHot && ' ⚠️ 과열 — 신규 진입 자제'}
+      </div>
+
+      {/* 관세쇼크 비교 박스 */}
+      {tariffRef != null && (
+        <div style={{background:'rgba(167,139,250,.08)',border:'1px solid rgba(167,139,250,.25)',
+          borderRadius:8,padding:'9px 12px',marginBottom:12,fontSize:11}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:6}}>
+            <div style={{display:'flex',alignItems:'center',gap:6}}>
+              <span style={{color:'#A78BFA',fontWeight:700,fontSize:12}}>📌 2025 관세쇼크 {tariffLabel}</span>
+              <span style={{fontFamily:'IBM Plex Mono',fontWeight:700,fontSize:14,color:'#C4B5FD'}}>
+                {fmt(tariffRef)}
+              </span>
+            </div>
+            <div style={{display:'flex',gap:6,alignItems:'center'}}>
+              {/* 현재 vs 저점 진행도 */}
+              {(() => {
+                const gap = Math.abs(current - tariffRef).toFixed(unit==='%'||unit==='x'?2:0);
+                const isCloser = flip ? current > tariffRef : current < tariffRef;
+                return (
+                  <span style={{fontSize:10,color:isCloser?'#86EFAC':'#FCA5A5',fontFamily:'IBM Plex Mono'}}>
+                    {isCloser ? `저점까지 ${gap}${unit==='%'?'%':unit==='x'?'x':''} 남음` : `저점 ${gap}${unit==='%'?'%':unit==='x'?'x':''} 초과`}
+                  </span>
+                );
+              })()}
+            </div>
+          </div>
+          {/* 현재위치 진행바 */}
+          {(() => {
+            const totalRange = Math.abs(tariffRef - (flip ? hotLevel || max : hotLevel || min));
+            const curRange   = Math.abs(current - (flip ? hotLevel || max : hotLevel || min));
+            const prog = Math.min(100, Math.round(curRange / totalRange * 100));
+            return (
+              <div style={{marginTop:6}}>
+                <div style={{display:'flex',justifyContent:'space-between',fontSize:9,color:'rgba(167,139,250,.7)',marginBottom:3,fontFamily:'IBM Plex Mono'}}>
+                  <span>{flip ? '과열(탐욕)' : '매수권'}</span>
+                  <span>현재 {Math.round(prog)}% 진행</span>
+                  <span>{flip ? '매수(공포)' : '과열권'}</span>
+                </div>
+                <div style={{height:5,borderRadius:3,background:'rgba(167,139,250,.15)',overflow:'hidden'}}>
+                  <div style={{height:'100%',width:`${prog}%`,background:'linear-gradient(90deg,rgba(167,139,250,.3),#A78BFA)',borderRadius:3,transition:'width .6s'}}/>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* 최근 추이 */}
+      <div style={{fontSize:10,color:'var(--gY)',marginBottom:5,fontFamily:'IBM Plex Mono',letterSpacing:1}}>최근 추이</div>
+      {history.map((h, i) => {
+        const hBuy = flip ? h.val <= buyLevel : h.val >= buyLevel;
+        const hHot = flip ? (hotLevel != null && h.val >= hotLevel) : (hotLevel != null && h.val <= hotLevel);
+        const hColor = hBuy ? 'var(--gr)' : hHot ? 'var(--re)' : '#EAB308';
+        const hPct = Math.abs(h.val) / Math.max(...history.map(x => Math.abs(x.val))) * 100;
+        return (
+          <div className="yh-row" key={i}>
+            <span className="yh-date">{h.date}</span>
+            <div className="yh-bw"><div className="yh-bf" style={{width:`${hPct.toFixed(0)}%`, background:hColor}}/></div>
+            <span className="yh-val" style={{color:hColor}}>{fmt(h.val)}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── 공통 게이지 컴포넌트 ──────────────────────────────────────
+function Gauge({ title, current, threshold, min, max, ticks, unit='%', historyData, interpret }) {
+  const isRisk = current >= threshold;
+  const pct = ((current - min) / (max - min) * 100).toFixed(1);
+  const thPct = ((threshold - min) / (max - min) * 100).toFixed(1);
+  const pinColor = isRisk ? '#EF4444' : '#22C55E';
+  const fillBg = isRisk
+    ? 'linear-gradient(90deg,#22C55E,#EAB308 40%,#EF4444)'
+    : 'linear-gradient(90deg,#22C55E,#4ADE80)';
+  const trackBg = `linear-gradient(90deg,#22C55E 0%,#22C55E ${thPct}%,#EAB308 ${thPct}%,#EAB308 ${+thPct+5}%,#EF4444 ${+thPct+5}%,#EF4444 100%)`;
+  const maxH = Math.max(...historyData.map(h=>h.val));
+  const diff = (current - threshold).toFixed(unit==='%'?3:1);
+
+  return (
+    <div className="card mg">
+      <div className="ct">{title}</div>
+      <div className="fb" style={{marginBottom:4}}>
+        <div>
+          <div className={`bn ${isRisk?'re':'gr'}`}>
+            {unit==='%' ? `${current.toFixed(3)}%` : `$${current.toFixed(1)}`}
+          </div>
+          <div className="sm" style={{marginTop:3}}>
+            기준선 {unit==='%'?`${threshold}%`:`$${threshold}`} 대비&nbsp;
+            <span style={{color:isRisk?'var(--re)':'var(--gr)',fontWeight:700}}>
+              {isRisk ? `+${diff}${unit==='%'?'%':''}` : `${diff}${unit==='%'?'%':''}`}
+            </span>
+          </div>
+        </div>
+        <div style={{textAlign:'right'}}>
+          <span className={`bdg ${isRisk?'br':'bg'}`} style={{fontSize:12,padding:'5px 14px'}}>
+            {isRisk ? '⚠️ 위험 구간' : '✅ 안정 구간'}
+          </span>
+          <div className="sm" style={{marginTop:5}}>기준선 {unit==='%'?`${threshold}%`:`$${threshold}`}</div>
+        </div>
+      </div>
+
+      <div className="gauge-wrap">
+        <div className="gauge-ticks">{ticks.map((t,i)=><span key={i}>{t}</span>)}</div>
+        <div className="gauge-track" style={{background:trackBg}}/>
+        <div className="gauge-fill" style={{width:`${pct}%`,background:fillBg}}/>
+        <div className="gauge-line" style={{left:`${thPct}%`}}>
+          <div className="gauge-line-lbl" style={{left:'50%'}}>
+            {unit==='%'?`${threshold}%`:`$${threshold}`}
+          </div>
+        </div>
+        <div className="gauge-pin" style={{left:`${pct}%`,background:pinColor}}/>
+        <div className="gauge-pin-lbl" style={{left:`${pct}%`,color:pinColor}}>
+          {unit==='%'?`${current.toFixed(3)}%`:`$${current.toFixed(1)}`}
+        </div>
+      </div>
+
+      <div className="gauge-status" style={{
+        background: isRisk?'rgba(239,68,68,.1)':'rgba(34,197,94,.1)',
+        borderColor: isRisk?'rgba(239,68,68,.35)':'rgba(34,197,94,.35)',
+        color: isRisk?'#FCA5A5':'#86EFAC'
+      }}>
+        <span style={{fontSize:16}}>{isRisk?'🔴':'🟢'}</span>
+        <div>{isRisk ? interpret.risk(current,threshold) : interpret.safe(current,threshold)}</div>
+      </div>
+
+      <div style={{marginTop:12}}>
+        <div style={{fontSize:10,color:'var(--gY)',marginBottom:6,fontFamily:'IBM Plex Mono',letterSpacing:1}}>최근 추이</div>
+        {historyData.map((h,i)=>{
+          const hPct=(h.val/maxH*100).toFixed(0);
+          const hRisk=h.val>=threshold;
+          return (
+            <div className="yh-row" key={i}>
+              <span className="yh-date">{h.date}</span>
+              <div className="yh-bw"><div className="yh-bf" style={{width:`${hPct}%`,background:hRisk?'var(--re)':'var(--gr)'}}/></div>
+              <span className="yh-val" style={{color:hRisk?'var(--re)':'var(--gr)'}}>
+                {unit==='%'?`${h.val}%`:`$${h.val}`}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{marginTop:12,display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+        {interpret.boxes.map((b,i)=>(
+          <div key={i} style={{background:b.bg,borderRadius:8,padding:'9px 11px',border:`1px solid ${b.c}33`}}>
+            <div style={{fontSize:10,fontWeight:700,color:b.c,marginBottom:3}}>{b.label}</div>
+            <div style={{fontSize:10,color:'var(--gY)',lineHeight:1.5,whiteSpace:'pre-line'}}>{b.desc}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── 탭1: 시장현황 ──────────────────────────────────────────────
+function T1() {
+  const tnxRisk = D.tnx.current >= D.tnx.threshold;
+  const oilRisk = D.oil.current >= D.oil.threshold;
+
+  const sigs = [
+    { l:"S&P 500 vs 200일선",  v:`${D.sp500.v.toLocaleString()} / ${D.sp500.ma.toLocaleString()}`, s:'RED' },
+    { l:"나스닥100 vs 200일선", v:`${D.ndx.v.toLocaleString()} / ${D.ndx.ma.toLocaleString()}`,   s:'RED' },
+    { l:"Fear & Greed",        v:`${D.fg} — 극단적 공포`,  s: D.fg <= 9 ? 'GREEN' : 'YELLOW' },
+    { l:"10년물 금리 (4.4% 기준)", v:`${D.tnx.current}%`, s: tnxRisk ? 'RED' : 'GREEN' },
+    { l:"VIX 변동성",          v:`${D.vix}`,              s:'RED' },
+    { l:"브렌트유 ($95 기준)",  v:`$${D.oil.current}`,    s: oilRisk ? 'RED' : 'GREEN' },
+    { l:"이란 유예 만료",       v:"4/6(월) — 협상 진행",   s:'YELLOW' },
+  ];
+  const ok = sigs.filter(s=>s.s==='GREEN').length;
+  const score = Math.round(ok/sigs.length*100);
+  const sc = s => s==='GREEN'?'var(--gr)':s==='YELLOW'?'#EAB308':'var(--re)';
+  const bc = s => s==='GREEN'?'bg':s==='YELLOW'?'by':'br';
+
+  return (
+    <div>
+      {/* 최신 상황 배너 */}
+      <div className="pb" style={{marginBottom:16}}>
+        <div style={{fontWeight:900,fontSize:13,marginBottom:4,color:'#A78BFA'}}>📡 2026.03.29 최신 상황</div>
+        🔥 <b>Fear &amp; Greed 10</b> — 한 자릿수 진입! 바닥 신호 1번 충족. 역사적 저점 구간.<br/>
+        🔴 <b>S&amp;P 500 6,368</b> — 5주 연속 하락, 7개월 최저. 나스닥 조정 진입.<br/>
+        🛢️ <b>브렌트유 $112.57</b> — 기준선 $95 대비 +$17.57 위험 구간. 스태그플레이션 우려.<br/>
+        🟡 <b>이란 협상</b> — 4/6(월) 유예 만료. 파키스탄 중재 중.
+      </div>
+
+      {/* 6개 미니 카드 */}
+      <div className="g6 mg">
+        <div className="card" style={{margin:0}}>
+          <div className="ct">진입 신호</div>
+          <div className={`bn ${ok>=4?'gr':ok>=2?'or':'re'}`}>{ok}/7</div>
+          <div className="sm" style={{marginTop:6}}>{score}% 충족</div>
+          <div className="gb"><div className="gf" style={{width:`${score}%`,background:ok>=4?'var(--gr)':'var(--re)'}}/></div>
+          <span className={`bdg ${ok>=4?'bg':'br'}`}>{ok>=4?'진입 검토':'현금 보유'}</span>
+        </div>
+        <div className="card" style={{margin:0}}>
+          <div className="ct">Fear &amp; Greed</div>
+          <div className="bn" style={{color:D.fg<=9?'var(--gr)':'var(--or)'}}>{D.fg}</div>
+          <div className="sm" style={{marginTop:6}}>{D.fg<=9?'✅ 한 자릿수!':'극단적 공포'}</div>
+          <div className="gb"><div className="gf" style={{width:`${D.fg}%`,background:'linear-gradient(90deg,var(--gr),var(--or),var(--re))'}}/></div>
+          <span className={`bdg ${D.fg<=9?'bg':'by'}`}>{D.fg<=9?'바닥 신호 ①':'주의'}</span>
+        </div>
+        <div className="card" style={{margin:0}}>
+          <div className="ct">나스닥 200일선</div>
+          <div className="bn re">{D.ndx.v.toLocaleString()}</div>
+          <div className="sm" style={{marginTop:6}}>200MA: {D.ndx.ma.toLocaleString()}</div>
+          <div className="gb"><div className="gf" style={{width:`${(D.ndx.v/D.ndx.ma*100).toFixed(0)}%`,background:'var(--re)'}}/></div>
+          <span className="bdg br">200일선 하회</span>
+        </div>
+        <div className="card" style={{margin:0,border:tnxRisk?'1px solid rgba(239,68,68,.4)':'1px solid rgba(34,197,94,.4)'}}>
+          <div className="ct">US 10년물</div>
+          <div className={`bn ${tnxRisk?'re':'gr'}`}>{D.tnx.current}%</div>
+          <div className="sm" style={{marginTop:6}}>기준선 {D.tnx.threshold}%</div>
+          <div className="gb"><div className="gf" style={{width:`${((D.tnx.current-3.5)/(5.5-3.5)*100).toFixed(0)}%`,background:tnxRisk?'linear-gradient(90deg,#22C55E,#EF4444)':'#22C55E'}}/></div>
+          <span className={`bdg ${tnxRisk?'br':'bg'}`}>{tnxRisk?'⚠️ 초과':'✅ 안정'}</span>
+        </div>
+        <div className="card" style={{margin:0}}>
+          <div className="ct">VIX</div>
+          <div className="bn or">{D.vix}</div>
+          <div className="sm" style={{marginTop:6}}>고변동성 구간</div>
+          <div className="gb"><div className="gf" style={{width:`${Math.min(100,D.vix*2)}%`,background:'var(--or)'}}/></div>
+          <div className="sm">20 이하 = 안정 신호</div>
+        </div>
+        <div className="card" style={{margin:0,border:D.oil.current>=110?'1px solid rgba(239,68,68,.4)':oilRisk?'1px solid rgba(249,115,22,.4)':'1px solid var(--bd)'}}>
+          <div className="ct">브렌트유</div>
+          <div className={`bn ${D.oil.current>=110?'re':'or'}`}>${D.oil.current}</div>
+          <div className="sm" style={{marginTop:6}}>기준선 ${D.oil.threshold}</div>
+          <div className="gb"><div className="gf" style={{width:`${Math.min(100,(D.oil.current/140*100)).toFixed(0)}%`,background:D.oil.current>=110?'var(--re)':'var(--or)'}}/></div>
+          <span className={`bdg ${D.oil.current>=110?'br':'bor'}`}>{D.oil.current>=110?'🔴 $110 초과':'⚠️ $95 초과'}</span>
+        </div>
+      </div>
+
+      {/* 국채 금리 게이지 */}
+      <Gauge
+        title="미국 10년물 국채 금리 (US10Y) — 기준선 4.4%"
+        current={D.tnx.current} threshold={D.tnx.threshold}
+        min={3.5} max={5.5} unit="%"
+        ticks={['3.5','3.8','4.0','4.2','4.4★','4.6','4.8','5.0','5.2','5.5']}
+        historyData={D.tnx.history}
+        interpret={{
+          risk: (c,t) => `현재 ${c.toFixed(3)}% — ${t}% 초과! 성장주·레버리지 밸류에이션 압박 증가.`,
+          safe: (c,t) => `현재 ${c.toFixed(3)}% — ${t}% 미만 안정 구간. 주식시장 부담 낮음.`,
+          boxes: [
+            {label:'4.4% 이상 (위험)', desc:'성장주·레버리지 부담↑\n채권 매력도 증가', c:'var(--re)', bg:'rgba(239,68,68,.08)'},
+            {label:'4.4% 미만 (안정)', desc:'주식 밸류에이션 지지\n레버리지 진입 환경 개선', c:'var(--gr)', bg:'rgba(34,197,94,.08)'},
+          ]
+        }}
+      />
+
+      {/* 유가 게이지 */}
+      <Gauge
+        title="WTI 브렌트유 — 기준선 $95 (인플레/스태그 판단)"
+        current={D.oil.current} threshold={D.oil.threshold}
+        min={50} max={140} unit="$"
+        ticks={['$50','$65','$75','$85','$95★','$100','$105','$110','$120','$140']}
+        historyData={D.oil.history}
+        interpret={{
+          risk: (c,t) => `현재 $${c.toFixed(1)} — $${t} 초과! ${c>=110?'$110 돌파. 스태그플레이션 우려. 레버리지 진입 위험.':'인플레 압력 증가. 주의 구간.'}`,
+          safe: (c,t) => `현재 $${c.toFixed(1)} — $${t} 미만 안정. 인플레 압력 낮음. 나스닥 상승 우호적.`,
+          boxes: [
+            {label:'$95 미만 (안정)', desc:'인플레 압력 낮음\n나스닥 상승 우호적', c:'var(--gr)', bg:'rgba(34,197,94,.08)'},
+            {label:'$95~$110 (주의)', desc:'인플레 우려 증가\nFed 금리인하 지연', c:'var(--or)', bg:'rgba(249,115,22,.08)'},
+          ]
+        }}
+      />
+
+      <div className="g2">
+        {/* 신호 체크판 */}
+        <div className="card">
+          <div className="ct">7가지 신호 체크판</div>
+          {sigs.map((s,i)=>(
+            <div className="sr" key={i}>
+              <span className="sl">{s.l}</span>
+              <div style={{display:'flex',alignItems:'center',gap:7}}>
+                <span className="sv" style={{color:sc(s.s),fontSize:10}}>{s.v}</span>
+                <span className={`bdg ${bc(s.s)}`} style={{fontSize:9,padding:'1px 7px'}}>
+                  {s.s==='GREEN'?'OK':s.s==='YELLOW'?'준비':'NG'}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div>
+          {/* ETF 현황 */}
+          <div className="card mg">
+            <div className="ct">레버리지 ETF 현황</div>
+            {[
+              {n:'TQQQ',p:D.tqqq.v,y:D.tqqq.ytd,h:D.tqqq.h,l:D.tqqq.l,d:'나스닥100 3배'},
+              {n:'FNGU',p:D.fngu.v,y:D.fngu.ytd,d:'FANG+ 3배'},
+              {n:'SOXL',p:D.soxl.v,y:D.soxl.ytd,d:'반도체 3배'},
+            ].map((e,i)=>(
+              <div key={i} style={{padding:'8px 0',borderBottom:i<2?'1px solid var(--bd)':'none'}}>
+                <div className="fb">
+                  <div>
+                    <span style={{fontFamily:'IBM Plex Mono',fontWeight:700,color:'var(--gL)'}}>{e.n}</span>
+                    <span className="sm" style={{marginLeft:7}}>{e.d}</span>
+                  </div>
+                  <div style={{textAlign:'right'}}>
+                    <div style={{fontFamily:'IBM Plex Mono',fontSize:15,fontWeight:700}}>${e.p}</div>
+                    <div style={{fontSize:10,color:'var(--re)'}}>{e.y}% YTD</div>
+                  </div>
+                </div>
+                {e.h&&<div className="gb" style={{marginTop:4}}><div className="gf" style={{width:`${((e.p-e.l)/(e.h-e.l)*100).toFixed(0)}%`,background:'var(--bl)'}}/></div>}
+              </div>
+            ))}
+            <div className="wb" style={{marginTop:10,fontSize:11}}>🔴 200일선 하위 — 레버리지 ETF 보유 금지</div>
+          </div>
+          {/* 배분 원칙 */}
+          <div className="card">
+            <div className="ct">뱅브로 원칙 — 지금 배분</div>
+            <div className="gb2" style={{fontSize:11}}>200일선 아래 = 현금이 무기. 기다리는 것이 가장 용감한 행동.</div>
+            {[
+              {a:'달러 예금/MMF',    r:'60%',amt:'6억',    ok:true},
+              {a:'GLD 금 ETF',      r:'20%',amt:'2억',    ok:true},
+              {a:'QQQ 소량',        r:'10%',amt:'1억',    ok:true},
+              {a:'원화 현금',       r:'10%',amt:'1억',    ok:true},
+              {a:'TQQQ/FNGU/SOXL', r:'0%', amt:'절대 금지',ok:false},
+            ].map((r,i)=>(
+              <div className="sr" key={i}>
+                <span className="sl">{r.a}</span>
+                <div style={{display:'flex',gap:7,alignItems:'center'}}>
+                  <span style={{fontFamily:'IBM Plex Mono',fontSize:11,color:r.ok?'var(--gY)':'var(--re)'}}>{r.amt}</span>
+                  <span className={`bdg ${r.ok?'bgy':'br'}`} style={{fontSize:9,padding:'1px 7px'}}>{r.r}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── 탭2: 시뮬레이터 ────────────────────────────────────────────
+function T2() {
+  const [cap,setCap]=useState(1000000000);
+  const [tpct,setTpct]=useState(50);
+  const [fpct,setFpct]=useState(15);
+  const [ndxR,setNdxR]=useState(80);
+  const [yrs,setYrs]=useState(3);
+  const tR=ndxR*2.7,fR=ndxR*3.2,qR=ndxR*0.95;
+  const qpct=100-tpct-fpct;
+  const tAmt=cap*tpct/100,fAmt=cap*fpct/100,qAmt=cap*qpct/100;
+  const ftT=tAmt*(1+tR/100),ftF=fAmt*(1+fR/100),ftQ=qAmt*(1+qR/100);
+  const total=ftT+ftF+ftQ,totR=((total-cap)/cap*100).toFixed(1);
+  const bT=tAmt*(1-0.55),bF=fAmt*(1-0.65),bQ=qAmt*(1-0.20);
+  const bTotal=bT+bF+bQ,bR=((bTotal-cap)/cap*100).toFixed(1);
+
+  return (
+    <div>
+      <div className="g2">
+        <div className="card">
+          <div className="ct">포트폴리오 설정</div>
+          {[
+            {l:"투자 원금",     v:fmtW(cap),                         min:1e8, max:5e9, step:1e8, val:cap, set:setCap},
+            {l:"TQQQ 비중",    v:`${tpct}% (${fmtW(cap*tpct/100)})`, min:0,  max:80, step:5,   val:tpct,set:setTpct},
+            {l:"FNGU 비중",    v:`${fpct}% (${fmtW(cap*fpct/100)})`, min:0,  max:40, step:5,   val:fpct,set:setFpct},
+            {l:"나스닥 수익률",v:`+${ndxR}%`,                        min:-50,max:300,step:10,  val:ndxR,set:setNdxR},
+            {l:"투자 기간",    v:`${yrs}년`,                         min:1,  max:10, step:1,   val:yrs, set:setYrs},
+          ].map((s,i)=>(
+            <div className="sw" key={i}>
+              <label><span>{s.l}</span><span style={{color:'var(--gL)',fontFamily:'IBM Plex Mono'}}>{s.v}</span></label>
+              <input type="range" min={s.min} max={s.max} step={s.step} value={s.val} onChange={e=>s.set(+e.target.value)}/>
+            </div>
+          ))}
+          <div className="sr"><span className="sl">QQQ 비중 (자동)</span>
+            <span style={{fontFamily:'IBM Plex Mono',fontSize:12,color:'var(--gL)'}}>{qpct}% ({fmtW(cap*qpct/100)})</span>
+          </div>
+          <div className="ib" style={{marginTop:12,fontSize:11}}>TQQQ ≈ 나스닥×2.7배 / FNGU ≈ 나스닥×3.2배 (음의복리 감안)</div>
+        </div>
+        <div>
+          <div className="card mg">
+            <div className="ct">낙관 시나리오</div>
+            <div className="fb" style={{marginBottom:10}}>
+              <div><div className="sm">최종 자산</div><div className="bn gr">{fmtW(total)}</div></div>
+              <div style={{textAlign:'right'}}>
+                <div className="sm">총 수익률</div>
+                <div style={{fontFamily:'IBM Plex Mono',fontSize:26,fontWeight:700,color:total>cap?'var(--gr)':'var(--re)'}}>
+                  {totR>0?'+':''}{totR}%
+                </div>
+              </div>
+            </div>
+            <div className="rb">
+              {[['원금',fmtW(cap)],['TQQQ 수익',fmtW(ftT-tAmt)],['FNGU 수익',fmtW(ftF-fAmt)],['QQQ 수익',fmtW(ftQ-qAmt)],['최종 합계',fmtW(total)]].map(([l,v],i)=>(
+                <div className="rr" key={i}><span className="rl">{l}</span><span className="rv">{v}</span></div>
+              ))}
+            </div>
+          </div>
+          <div className="card">
+            <div className="ct">폭락 시나리오 (200일선 무시 진입 시)</div>
+            <div className="fb" style={{marginBottom:10}}>
+              <div><div className="sm">최종 자산</div><div className="bn re">{fmtW(bTotal)}</div></div>
+              <div style={{textAlign:'right'}}>
+                <div className="sm">손실률</div>
+                <div style={{fontFamily:'IBM Plex Mono',fontSize:26,fontWeight:700,color:'var(--re)'}}>{bR}%</div>
+              </div>
+            </div>
+            <div className="wb" style={{fontSize:11}}>TQQQ -55% / FNGU -65% / QQQ -20% 기준. 200일선 하위 레버리지 보유의 리스크입니다.</div>
+          </div>
+        </div>
+      </div>
+      <div className="card" style={{marginTop:14}}>
+        <div className="ct">역사적 TQQQ 저점 매수 수익률</div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10}}>
+          {[
+            {ev:'2020.3 코로나', buy:'$8',      ret:'+1,038%', c:'var(--gr)'},
+            {ev:'2022.10 금리',  buy:'$15',     ret:'+287%',   c:'var(--gr)'},
+            {ev:'2025.4 관세',   buy:'$17',     ret:'+253%',   c:'var(--gr)'},
+            {ev:'현재 이란전쟁', buy:'$38.50',  ret:'대기 중', c:'var(--or)'},
+          ].map((h,i)=>(
+            <div key={i} style={{background:'var(--nv3)',borderRadius:9,padding:12,textAlign:'center',border:'1px solid var(--bd)'}}>
+              <div style={{fontSize:10,color:'var(--gY)',marginBottom:5}}>{h.ev}</div>
+              <div style={{fontFamily:'IBM Plex Mono',fontSize:11,marginBottom:3}}>{h.buy}</div>
+              <div style={{fontFamily:'Bebas Neue',fontSize:26,color:h.c}}>{h.ret}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── 탭3: 바닥 신호판 ───────────────────────────────────────────
+function T3() {
+  const [chk,setChk]=useState({});
+  const tog=k=>setChk(p=>({...p,[k]:!p[k]}));
+  const tnxRisk = D.tnx.current >= D.tnx.threshold;
+  const oilRisk = D.oil.current >= D.oil.threshold;
+
+  const sigs=[
+    {k:'s1',lbl:'Fear & Greed 한 자릿수(0~9) 진입 ★충족★',
+     desc:`현재 ${D.fg} — 한 자릿수 진입! 역사적 저점 구간. 2020·2022·2025 모두 바닥이었음.`,
+     cur:`현재 ${D.fg} ✅ 충족!`, g:100, c:'var(--gr)', done:true},
+    {k:'s2',lbl:'HY Spread 5 이상에서 주간 꺾임',
+     desc:'현재 상승 중. 꺾이는 순간이 공포 극점 통과 신호.',
+     cur:'상승 중 (미충족)', g:40, c:'var(--re)', done:false},
+    {k:'s3',lbl:'NDX 200일선 재돌파 2일 연속 ★핵심★',
+     desc:`일봉 종가 ${D.ndx.ma.toLocaleString()} 위에서 2일 연속 종가. 이게 없으면 진입 금지!`,
+     cur:`현재 ${D.ndx.v.toLocaleString()} — 200일선(${D.ndx.ma.toLocaleString()}) 크게 하회`, g:99, c:'var(--re)', done:false},
+    {k:'s4',lbl:'이란 협상 타결 or 호르무즈 재개',
+     desc:'근본 원인 해소. 4/6(월) 유예 만료가 다음 분수령.',
+     cur:'파키스탄 중재 협상 진행 중 (미충족)', g:35, c:'var(--bl)', done:false},
+    {k:'s5',lbl:'VIX 20 이하 하락',
+     desc:`현재 ${D.vix}. 200일선 회복과 함께 자연히 내려옴.`,
+     cur:`현재 ${D.vix} (미충족)`, g:55, c:'var(--bl)', done:false},
+    {k:'s6',lbl:`10년물 국채 금리 ${D.tnx.threshold}% 이하`,
+     desc:`현재 ${D.tnx.current}%. ${D.tnx.threshold}% 넘으면 성장주 밸류에이션 압박.`,
+     cur:`현재 ${D.tnx.current}% — 기준선 ${tnxRisk?'초과 ⚠️':'미만 ✅'}`,
+     g: Math.round((D.tnx.current-3.5)/(5.5-3.5)*100),
+     c: tnxRisk?'var(--re)':'var(--gr)', done:!tnxRisk},
+    {k:'s7',lbl:`WTI 브렌트유 $${D.oil.threshold} 이하`,
+     desc:`현재 $${D.oil.current}. 고유가는 인플레·스태그 우려로 레버리지 환경 악화.`,
+     cur:`현재 $${D.oil.current} — 기준선 ${oilRisk?'초과 🔴':'미만 ✅'}`,
+     g: Math.min(100,Math.round(D.oil.current/140*100)),
+     c: oilRisk?'var(--re)':'var(--gr)', done:!oilRisk},
+    // ── 기술 지표 4종 ──
+    {k:'s8',lbl:'Stock Price Strength — -5% 이하',
+     desc:`NYSE 신고가-신저가 비율. 현재 ${D.sps.current}%. 관세쇼크 저점 -8%. -5% 이하면 극단 공포 매수권.`,
+     cur:`현재 ${D.sps.current}% — ${D.sps.current<=D.sps.buyLevel?'✅ 매수 신호':'미충족 (관세쇼크 -8% 참고)'}`,
+     g: Math.min(100, Math.round(Math.abs(D.sps.current)/10*100)),
+     c:'var(--gr)', done: D.sps.current <= D.sps.buyLevel},
+    {k:'s9',lbl:'Stock Price Breadth — MSI 500 이하',
+     desc:`McClellan Summation Index. 현재 ${D.spb.current}. 500 이하면 시장 폭 붕괴 신호.`,
+     cur:`현재 ${D.spb.current} — ${D.spb.current<=D.spb.buyLevel?'✅ 매수 신호':'미충족'}`,
+     g: Math.min(100, Math.round(Math.abs(D.spb.current)/1000*100)),
+     c:'var(--gr)', done: D.spb.current <= D.spb.buyLevel},
+    {k:'s10',lbl:'Put/Call Ratio — 1.0 이상 (역발상 매수)',
+     desc:`현재 ${D.pcr.current}x. 공포 극대화로 풋 폭증. 1.0 이상이면 역발상 매수권.`,
+     cur:`현재 ${D.pcr.current}x — ${D.pcr.current>=1.0?'✅ 역발상 매수 신호':'미충족'}`,
+     g: Math.min(100, Math.round(D.pcr.current/1.6*100)),
+     c:'var(--gr)', done: D.pcr.current >= 1.0},
+    {k:'s11',lbl:'RSI (14일) — 30 이하 과매도',
+     desc:`S&P500 RSI 14일 기준. 현재 ${D.rsi.current.toFixed(1)}. 30 이하 = 역대급 과매도.`,
+     cur:`현재 ${D.rsi.current.toFixed(1)} — ${D.rsi.current<=D.rsi.buyLevel?'✅ 과매도 매수 신호!':'미충족'}`,
+     g: Math.round(D.rsi.current),
+     c:'var(--gr)', done: D.rsi.current <= D.rsi.buyLevel},
+  ];
+
+  const score=Object.values(chk).filter(Boolean).length;
+
+  const verdict=()=>{
+    if(score>=8) return{ic:'🚀',t:'진입 가능!',  d:'핵심 신호 충족\n소액 분할 진입 검토', c:'var(--gr)',bg:'rgba(34,197,94,.1)', bc:'rgba(34,197,94,.3)'};
+    if(score>=5) return{ic:'⚡',t:'준비 단계',   d:'일부 신호 충족\n200일선 돌파 대기',   c:'var(--or)',bg:'rgba(249,115,22,.1)',bc:'rgba(249,115,22,.3)'};
+    if(score>=2) return{ic:'⏳',t:'대기 중',     d:'신호 수집 중\n현금 보유 유지',        c:'var(--bl)',bg:'rgba(59,130,246,.1)',bc:'rgba(59,130,246,.3)'};
+    return       {ic:'🛡️',t:'현금 보유',        d:'진입 신호 없음\n현금이 무기입니다',    c:'var(--gY)',bg:'rgba(100,116,139,.15)',bc:'rgba(100,116,139,.3)'};
+  };
+  const v=verdict();
+
+  return (
+    <div>
+      <div className="g2 mg">
+        <div className="card" style={{textAlign:'center'}}>
+          <div className="ct">진입 신호 점수</div>
+          <div className="bn" style={{fontSize:64,color:score>=8?'var(--gr)':score>=5?'var(--or)':score>=2?'var(--bl)':'var(--re)'}}>{score}/11</div>
+          <div className="sm" style={{marginTop:6}}>신호 충족 개수 (기술지표 포함)</div>
+          <div style={{marginTop:10}}>
+            {[0,1,2,3,4,5,6,7,8,9,10].map(i=>(
+              <div key={i} style={{height:4,borderRadius:3,marginBottom:2,
+                background:i<score?'var(--gr)':'rgba(255,255,255,.1)',transition:'background .3s'}}/>
+            ))}
+          </div>
+          <div className="gb2" style={{marginTop:12,fontSize:11}}>5개 이상 충족 시 소량 진입 고려 / 8개 이상 본격 진입 검토</div>
+        </div>
+        <div className="card" style={{textAlign:'center'}}>
+          <div className="ct">진입 판단</div>
+          <div style={{fontSize:36,marginBottom:8}}>{v.ic}</div>
+          <div style={{padding:'14px',borderRadius:10,background:v.bg,border:`1px solid ${v.bc}`}}>
+            <div style={{fontSize:18,fontWeight:900,color:v.c,marginBottom:4}}>{v.t}</div>
+            <div style={{fontSize:11,color:'var(--gY)',whiteSpace:'pre-line'}}>{v.d}</div>
+          </div>
+          {/* 금리 + 유가 미니 */}
+          <div style={{marginTop:10,display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,textAlign:'left'}}>
+            {[
+              {lbl:'10Y YIELD',val:`${D.tnx.current}%`,risk:tnxRisk,ref:`기준 ${D.tnx.threshold}%`},
+              {lbl:'BRENT OIL',val:`$${D.oil.current}`,risk:oilRisk,ref:`기준 $${D.oil.threshold}`},
+            ].map((m,i)=>(
+              <div key={i} style={{background:'var(--nv3)',borderRadius:8,padding:'9px 11px',border:'1px solid var(--bd)'}}>
+                <div style={{fontFamily:'IBM Plex Mono',fontSize:9,color:'var(--gY)',marginBottom:4}}>{m.lbl}</div>
+                <div style={{fontFamily:'Bebas Neue',fontSize:22,color:m.risk?'var(--re)':'var(--gr)'}}>{m.val}</div>
+                <span className={`bdg ${m.risk?'br':'bg'}`} style={{fontSize:9,marginTop:3}}>{m.risk?'⚠️ 초과':'✅ 안정'}</span>
+                <div className="sm" style={{marginTop:3}}>{m.ref}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="ct">신호 체크리스트 (11개) — 직접 클릭해서 체크하세요</div>
+        {sigs.map(s=>(
+          <div key={s.k} className="ci" onClick={()=>tog(s.k)}>
+            <div className={`cb ${chk[s.k]?'ck':''}`}>
+              {chk[s.k]&&<span style={{color:'#fff',fontSize:11,fontWeight:900}}>✓</span>}
+            </div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:12,fontWeight:700,color:chk[s.k]?s.c:s.done?s.c:'var(--wh)',marginBottom:2}}>{s.lbl}</div>
+              <div style={{fontSize:10,color:'var(--gY)',marginBottom:4}}>{s.desc}</div>
+              <div className="gb" style={{height:4}}>
+                <div className="gf" style={{width:chk[s.k]||s.done?'100%':`${s.g}%`,background:chk[s.k]||s.done?s.c:'linear-gradient(90deg,var(--gr),var(--re))'}}/> 
+              </div>
+              <div style={{fontSize:9,color:'var(--gy)',marginTop:3,fontFamily:'IBM Plex Mono'}}>{s.cur}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── 탭4: 실행 체크리스트 ──────────────────────────────────────
+function T4() {
+  const [done,setDone]=useState({});
+  const tog=k=>setDone(p=>({...p,[k]:!p[k]}));
+  const secs=[
+    {t:'🔴 즉시 실행 (오늘)',items:[
+      {k:'a1',tx:'미래에셋 or 키움 해외주식 계좌 개설 신청'},
+      {k:'a2',tx:'레버리지 ETF 보유 여부 확인 → 보유 시 당일 매도'},
+      {k:'a3',tx:'여유자금 달러 환전 → 달러 MMF 또는 달러 RP 가입'},
+      {k:'a4',tx:'GLD 2억 매수 (해외주식 계좌 세팅 후)'},
+      {k:'a5',tx:'QQQ 1억 소량 매수 (장기 확신 포지션)'},
+    ]},
+    {t:'🟡 이번 주 모니터링',items:[
+      {k:'b1',tx:'TradingView → NDX 일봉 → MA200(24,200) 돌파 알림 등록'},
+      {k:'b2',tx:'CNN Fear & Greed 북마크 (edition.cnn.com/markets/fear-and-greed)'},
+      {k:'b3',tx:'FRED HY Spread 북마크 (fred.stlouisfed.org → ICE BofA HY OAS)'},
+      {k:'b4',tx:'10년물 금리 4.4% 기준 모니터링 (finance.yahoo.com/quote/^TNX)'},
+      {k:'b5',tx:'유가 $95 기준 모니터링 (브렌트유 BZ=F) — $95 이하 복귀 시 신호'},
+      {k:'b6',tx:'4월 6일(월) 캘린더 등록 — 이란 유예 만료일 ★'},
+    ]},
+    {t:'🟢 200일선 재돌파 시 실행',items:[
+      {k:'c1',tx:'돌파 확인 당일 종가 → TQQQ 2억 시장가 매수'},
+      {k:'c2',tx:'GLD 보유분 절반 익절 → 실탄 확보'},
+      {k:'c3',tx:'3~5일 후 200일선 유지 확인 → TQQQ 추가 2억'},
+      {k:'c4',tx:'2주 후 완전 안착 → TQQQ 1억 + FNGU 5천만'},
+      {k:'c5',tx:'항상 현금 2억 이상 유보 유지'},
+    ]},
+    {t:'⛔ 절대 하지 말 것',items:[
+      {k:'d1',tx:'200일선 회복 전 TQQQ/FNGU/SOXL 매수 — F&G 10이어도 진입 금지!'},
+      {k:'d2',tx:'"많이 빠졌으니 저점이겠지" 감에 의한 진입'},
+      {k:'d3',tx:'생활비·대출금·타인 자금 투자'},
+      {k:'d4',tx:'손실 복구 목적 레버리지 추가매수'},
+      {k:'d5',tx:'커뮤니티·SNS 추천 뇌동매매'},
+    ]},
+  ];
+  const all=secs.flatMap(s=>s.items).length;
+  const cnt=Object.values(done).filter(Boolean).length;
+  const pct=Math.round(cnt/all*100);
+
+  return (
+    <div>
+      <div className="card mg">
+        <div className="fb">
+          <div><div className="ct">실행 진행률</div>
+            <div style={{fontFamily:'IBM Plex Mono',fontSize:22,fontWeight:700,color:'var(--gL)'}}>{cnt}/{all}</div>
+          </div>
+          <div style={{textAlign:'right'}}>
+            <div className="sm">완료율</div>
+            <div style={{fontFamily:'Bebas Neue',fontSize:40,color:pct>70?'var(--gr)':'var(--or)'}}>{pct}%</div>
+          </div>
+        </div>
+        <div className="gb" style={{height:10}}>
+          <div className="gf" style={{width:`${pct}%`,background:'linear-gradient(90deg,var(--go),var(--gr))'}}/>
+        </div>
+      </div>
+      {secs.map((sec,si)=>(
+        <div className="card mg" key={si}>
+          <div className="ct">{sec.t}</div>
+          {sec.items.map(it=>(
+            <div key={it.k} className="ci" onClick={()=>tog(it.k)}>
+              <div className={`cb ${done[it.k]?'ck':''}`}>
+                {done[it.k]&&<span style={{color:'#fff',fontSize:11,fontWeight:900}}>✓</span>}
+              </div>
+              <div className={`ctxt ${done[it.k]?'dn':''}`}>{it.tx}</div>
+            </div>
+          ))}
+        </div>
+      ))}
+      <div className="wb">본 내용은 학습 참고 자료이며 투자 권유가 아닙니다. 모든 투자 결정은 본인의 판단과 책임 하에 이루어져야 합니다.</div>
+    </div>
+  );
+}
+
+// ── 탭5: 기술 지표 ────────────────────────────────────────────
+function T5() {
+  // 4개 지표 매수 신호 카운트
+  const spsOk = D.sps.current <= D.sps.buyLevel;
+  const spbOk = D.spb.current <= D.spb.buyLevel;
+  const pcrOk = D.pcr.current >= 1.0;  // 1.0 이상이면 역발상 매수권
+  const rsiOk = D.rsi.current <= D.rsi.buyLevel;
+  const techScore = [spsOk, spbOk, pcrOk, rsiOk].filter(Boolean).length;
+
+  return (
+    <div>
+      {/* 종합 요약 */}
+      <div className="card mg">
+        <div className="ct">기술 지표 종합 — 매수 신호 카운트</div>
+        <div className="fb">
+          <div>
+            <div className="bn" style={{fontSize:56,
+              color: techScore>=3?'var(--gr)':techScore>=2?'var(--or)':'var(--re)'}}>
+              {techScore}/4
+            </div>
+            <div className="sm" style={{marginTop:4}}>기술적 매수 신호 개수</div>
+          </div>
+          <div style={{textAlign:'right',maxWidth:260}}>
+            <span className={`bdg ${techScore>=3?'bg':techScore>=2?'by':'br'}`}
+              style={{fontSize:12,padding:'5px 14px',marginBottom:8,display:'inline-flex'}}>
+              {techScore>=3 ? '📈 기술적 바닥권' : techScore>=2 ? '⚡ 신호 감지 중' : '🛡️ 중립~경계'}
+            </span>
+            <div className="sm" style={{marginTop:6,lineHeight:1.6}}>
+              ※ 기술 지표는 보조 참고용입니다.<br/>
+              NDX 200일선 재돌파가 최우선 신호!
+            </div>
+          </div>
+        </div>
+        {/* 4개 미니 상태 */}
+        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8,marginTop:14}}>
+          {[
+            {lbl:'Stock Strength',  val:`${D.sps.current}%`, ok:spsOk,  hint:`매수: ≤${D.sps.buyLevel}%`},
+            {lbl:'Breadth (MSI)',   val:D.spb.current >= 0 ? `+${D.spb.current}` : `${D.spb.current}`, ok:spbOk,  hint:`매수: ≤${D.spb.buyLevel}`},
+            {lbl:'Put/Call Ratio',  val:`${D.pcr.current}x`, ok:pcrOk, hint:`매수: ≥1.0`},
+            {lbl:'RSI (14D)',       val:`${D.rsi.current.toFixed(1)}`, ok:rsiOk, hint:`매수: ≤${D.rsi.buyLevel}`},
+          ].map((m,i)=>(
+            <div key={i} style={{background:'var(--nv3)',borderRadius:8,padding:'10px 12px',border:`1px solid ${m.ok?'rgba(34,197,94,.3)':'var(--bd)'}`}}>
+              <div style={{fontFamily:'IBM Plex Mono',fontSize:9,color:'var(--gY)',marginBottom:4}}>{m.lbl}</div>
+              <div style={{fontFamily:'Bebas Neue',fontSize:26,color:m.ok?'var(--gr)':'var(--re)'}}>{m.val}</div>
+              <span className={`bdg ${m.ok?'bg':'br'}`} style={{fontSize:9}}>{m.ok?'✅ 매수':'대기'}</span>
+              <div style={{fontSize:9,color:'var(--gy)',marginTop:3,fontFamily:'IBM Plex Mono'}}>{m.hint}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="ib" style={{marginBottom:16,fontSize:11}}>
+        💡 <b>기술지표 해석 원칙:</b> 4개 중 3개 이상 매수 신호여도 NDX 200일선(24,200) 2일 연속 돌파 확인 전까지 레버리지 진입 금지. 기술 지표는 타이밍 보조 수단입니다.
+      </div>
+
+      {/* 4개 상세 카드 */}
+      <div className="g2">
+        <TechCard
+          title="① Stock Price Strength — NYSE 신고가·신저가"
+          sub="NYSE 52주 신고가 비율 − 신저가 비율 (Net %). 관세쇼크 저점 -8%"
+          current={D.sps.current}
+          buyLevel={D.sps.buyLevel}
+          hotLevel={D.sps.hotLevel}
+          min={-10} max={8}
+          unit="%"
+          history={D.sps.history}
+          flip={true}
+          tariffRef={D.sps.tariffLow}
+          tariffLabel="저점"
+        />
+        <TechCard
+          title="② Stock Price Breadth — McClellan Summation"
+          sub="McClellan Summation Index (시장 폭 누적 지수)"
+          current={D.spb.current}
+          buyLevel={D.spb.buyLevel}
+          hotLevel={D.spb.hotLevel}
+          min={-1000} max={3000}
+          unit=""
+          history={D.spb.history}
+          flip={true}
+          tariffRef={D.spb.tariffLow}
+          tariffLabel="저점"
+        />
+        <TechCard
+          title="③ Put/Call Ratio — CBOE 옵션 비율"
+          sub="풋 / 콜 거래량 비율 (역발상 지표)"
+          current={D.pcr.current}
+          buyLevel={0.8}
+          hotLevel={null}
+          min={0.4} max={1.6}
+          unit="x"
+          history={D.pcr.history}
+          flip={false}
+          tariffRef={D.pcr.tariffHigh}
+          tariffLabel="고점(역발상 매수 극점)"
+        />
+        <TechCard
+          title="④ RSI (14일) — S&P 500 상대강도지수"
+          sub="14일 RSI — 30 이하 과매도, 75 이상 과열"
+          current={D.rsi.current}
+          buyLevel={D.rsi.buyLevel}
+          hotLevel={D.rsi.hotLevel}
+          min={0} max={100}
+          unit=""
+          history={D.rsi.history}
+          flip={true}
+          tariffRef={D.rsi.tariffLow}
+          tariffLabel="저점"
+        />
+      </div>
+
+      {/* 지표별 해석 가이드 */}
+      <div className="card">
+        <div className="ct">기술 지표 해석 가이드</div>
+        {[
+          {
+            num:'①', name:'Stock Price Strength',
+            buy:'-5% 이하', hot:'+5% 이상',
+            desc:'NYSE 52주 신고가 비율에서 신저가 비율을 뺀 수치(%). CNN Fear & Greed 구성 지표. 현재 -1.2%로 매수 기준(-5%) 미달. 📌관세쇼크(2025.4) 저점은 -8%까지 빠졌다가 V자 반등.',
+            cur: `현재 ${D.sps.current}% / 관세쇼크 저점 ${D.sps.tariffLow}% → ${D.sps.current<=D.sps.buyLevel ? '✅ 매수 신호!' : `목표까지 ${(D.sps.buyLevel - D.sps.current).toFixed(1)}%p 남음`}`
+          },
+          {
+            num:'②', name:'Stock Price Breadth (McClellan Summation)',
+            buy:'500 이하', hot:'2000 이상',
+            desc:'단기 상승·하락 종목 수 흐름의 누적 지수. 500 이하 = 시장 내부 폭 악화 매수신호. 2000 이상 = 과열. 📌관세쇼크(2025.4) 저점 약 -900에서 +500 회복 후 강세 확인.',
+            cur: `현재 ${D.spb.current} / 관세쇼크 저점 ${D.spb.tariffLow} → ${D.spb.current<=D.spb.buyLevel ? '✅ 매수 신호!' : `매수 기준(${D.spb.buyLevel}) 달성. 관세쇼크 저점의 ${Math.round(Math.abs(D.spb.current)/Math.abs(D.spb.tariffLow)*100)}% 수준`}`
+          },
+          {
+            num:'③', name:'Put/Call Ratio',
+            buy:'0.8 이하 = 과열 경고 / 1.0 이상 = 역발상 매수',
+            hot:'0.8 이하 (콜 과다)',
+            desc:'0.8 이하 → 콜 폭증 = 탐욕 과열 = 고점 경고. 1.0 이상 → 풋 폭증 = 공포 극대 = 역발상 매수. 📌관세쇼크(2025.4) 고점 약 1.2x로 현재(1.15x)와 거의 동일 수준.',
+            cur: `현재 ${D.pcr.current}x / 관세쇼크 고점 ${D.pcr.tariffHigh}x → ${D.pcr.current>=1.0 ? '✅ 역발상 매수 신호! 관세쇼크 수준 도달' : '역발상 매수권 미달'}`
+          },
+          {
+            num:'④', name:'RSI (14일)',
+            buy:'30 이하 (과매도)', hot:'75 이상 (과열)',
+            desc:'14일 RSI 30 이하 = 과매도 기술적 반등 가능. 75 이상 = 과열 조정 경계. 📌관세쇼크(2025.4) 저점 약 23으로, 현재(22.08)는 관세쇼크보다 더 깊은 과매도!',
+            cur: `현재 ${D.rsi.current.toFixed(1)} / 관세쇼크 저점 ${D.rsi.tariffLow} → ${D.rsi.current<=D.rsi.tariffLow ? '⚡ 관세쇼크보다 더 깊은 과매도!' : `관세쇼크 저점(${D.rsi.tariffLow})보다 ${(D.rsi.current - D.rsi.tariffLow).toFixed(1)}p 높음`}`
+          },
+        ].map((g,i)=>(
+          <div key={i} style={{padding:'12px 0',borderBottom:i<3?'1px solid var(--bd)':'none'}}>
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:5}}>
+              <span style={{fontFamily:'Bebas Neue',fontSize:18,color:'var(--gL)'}}>{g.num}</span>
+              <span style={{fontWeight:700,fontSize:12}}>{g.name}</span>
+              <span className="bdg bg" style={{fontSize:9}}>매수: {g.buy}</span>
+              {g.hot && <span className="bdg br" style={{fontSize:9}}>과열: {g.hot}</span>}
+            </div>
+            <div style={{fontSize:11,color:'var(--gY)',lineHeight:1.7,marginBottom:4}}>{g.desc}</div>
+            <div style={{fontFamily:'IBM Plex Mono',fontSize:10,color:
+              g.cur.includes('✅')?'var(--gr)':'var(--gY)'}}>{g.cur}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+function App() {
+  const [tab,setTab]=useState(0);
+  const tabs=['📊 시장 현황','💰 수익 시뮬레이터','🎯 바닥 신호판','✅ 실행 체크리스트','📈 기술 지표'];
+  return (
+    <>
+      <style>{S}</style>
+      <div className="app">
+        <div className="hdr">
+          <div>
+            <div className="hdr-t">BangBro Dashboard</div>
+            <div className="hdr-s">뱅브로식 미국주식 투자 모니터링 시스템</div>
+          </div>
+          <div style={{textAlign:'right'}}>
+            <div style={{fontSize:11,color:'var(--gY)'}}><span className="ldot"/>최종 업데이트</div>
+            <div style={{fontFamily:'IBM Plex Mono',fontSize:12,color:'var(--gL)'}}>2026.03.29</div>
+          </div>
+        </div>
+        <div className="tabs">
+          {tabs.map((t,i)=>(
+            <button key={i} className={`tab ${tab===i?'on':''}`} onClick={()=>setTab(i)}>{t}</button>
+          ))}
+        </div>
+        <div className="content">
+          {tab===0&&<T1/>}
+          {tab===1&&<T2/>}
+          {tab===2&&<T3/>}
+          {tab===3&&<T4/>}
+          {tab===4&&<T5/>}
+        </div>
+      </div>
+    </>
+  );
+}
+
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
